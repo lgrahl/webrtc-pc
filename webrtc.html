@@ -128,6 +128,10 @@
       <dfn>peeridentity</dfn>, <dfn>request an identity assertion</dfn> and
       <dfn>validate the identity</dfn> are defined in [[!WEBRTC-IDENTITY]].
     </p>
+    <p>The terms <dfn>permission</dfn>, <dfn>retrieve the permission
+      state</dfn>, <dfn id="request-permission-to-use">request permission to
+      use</dfn> and <dfn id="create-permission">create a permission storage
+      entry</dfn> are defined in [[!PERMISSIONS]].</p>
     <p class="note">
       The general principles for Javascript APIs apply, including the principle
       of <a href="https://w3ctag.github.io/design-principles/#js-rtc">
@@ -10957,6 +10961,102 @@ async function gatherStats() {
         <code>deviceId</code> and <code>groupId</code>, will always be
         missing.</p>
       </section>
+    </section>
+  </section>
+  <section>
+    <h2>Direct Connection Permission API</h2>
+    <p>The Direct Connection Permission API allows a web application to <a>request permission to use</a> a less strict policy regarding sharing local addresses as defined in [[RTCWEB-IP-HANDLING]]. This API and the behavioral requirements of the user agent ensure that permission can be requested in a use case neutral way. If permission has been granted, it provides explicit user consent as required by [[RTCWEB-IP-HANDLING]].</p>
+    <p>The <dfn data-lt="best-available-mode">best available <code><a>RTCConnectionMode</a></code></dfn> the user agent can offer SHOULD be <code>"enumerate-all"</code> and the <dfn data-lt="default-mode">default <code><a>RTCConnectionMode</a></code></dfn> the user agent uses by default SHOULD be <code>"default-route"</code>. However, the user agent MAY choose different modes determined by the user agents preferences.</p>
+    <section>
+      <h3>RTCPeerConnection Interface Extensions</h3>
+      <p>The Direct Connection Permission API extends the <code><a>RTCPeerConnection</a></code> interface as described below.</p>
+      <div>
+        <pre class="idl">partial interface RTCPeerConnection {
+    Promise&lt;RTCConnectionMode&gt; getConnectionMode ();
+    Promise&lt;void&gt;              requestDirectConnection ();
+};</pre>
+        <section>
+          <h2>Methods</h2>
+          <dl data-link-for="RTCPeerConnection" data-dfn-for=
+          "RTCPeerConnection" class="methods">
+            <dt><dfn data-idl><code>getConnectionMode</code></dfn></dt>
+            <dd>
+              <p>To retrieve the currently active <code><a>RTCConnectionMode</a></code>, the user agent MUST run the following steps:</p>
+              <ol>
+                <li>Let <var>promise</var> be a new promise.</li>
+                <li>Return <var>promise</var> and continue the following steps asynchronously.</li>
+                <li><a>Retrieve the permission state</a> using a <code>PermissionDescriptor</code> with its <code>name</code> member set to <code>"direct-connection"</code>. Let <var>result</var> be the result of this operation.</li>
+                <li>If <var>result</var> is <code>"granted"</code>, <a>resolve</a> <var>promise</var> with the <a data-lt="best-available-mode">best available <code>RTCConnectionMode</code></a> and abort these steps.</li>
+                <li>The user agent MAY additionally consult other <a>permissions</a> that it considers appropriate to activate the <a data-lt="best-available-mode">best available <code>RTCConnectionMode</code></a>. For each of these <a>permissions</a>, run the following steps:
+                  <ol>
+                    <li>Let <var>name</a> be the <code>PermissionName</code> of the <a>permission</a>.</li>
+                    <li><a>Retrieve the permission state</a> using a <code>PermissionDescriptor</code> with its <code>name</code> member set to <var>name</var>, and, optionally, further members associated to the <a>permission</a>. Let <var>result</var> be the result of this operation.</li>
+                    <li>If <var>result</var> is <code>"granted"</code>, <a>resolve</a> <var>promise</var> with the <a data-lt="best-available-mode">best available <code>RTCConnectionMode</code></a> and abort these steps.</li>
+                  </ol>
+                </li>
+                <li><a>Resolve</a> <var>promise</var> with the <a data-lt="default-mode">default <code>RTCConnectionMode</code></a>.</li>
+              </ol>
+            </dd>
+            <dt><dfn data-idl><code>requestDirectConnection</code></dfn></dt>
+            <dd>
+              <p>To request a direct connection in order to activate the <a data-lt="best-available-mode">best available <code>RTCConnectionMode</code></a>, the user agent MUST run the following steps:</p>
+              <ol>
+                <li>Let <var>promise</var> be a new promise.</li>
+                <li>Return <var>promise</var> and continue the following steps asynchronously.</li>
+                <li><a>Request permission to use</a> using a <code>PermissionDescriptor</code> with its <code>name</code> member set to <code>"direct-connection"</code>:
+                  <ol>
+                    <li>Let <var>result</var> be the result of the permission request.</li>
+                    <li>If <var>result</var> is <code>"granted"</code>, then <a>resolve</a> <var>promise</var> with <code>undefined</code> and abort these steps.</li>
+                    <li>
+                      <p>If <var>result</var> is <code>"denied"</code>, then <a>reject</a> <var>promise</var> with a newly <a data-link-for="exception" data-lt="create">created</a> <code>DOMException</code> of type <code>NotAllowedError</code>.</p>
+                      <p>The user agent MAY choose to <a data-lt="create-permission">create a permission storage entry</a> for later use by the same origin, so that the user does not need to grant permission again at a later time.</p>
+                    </li>
+                  </ol>
+                </li>
+              </ol>
+            </dd>
+          </dl>
+        </section>
+    </section>
+    <section>
+      <h3><dfn>RTCConnectionMode</dfn> Enum</h3>
+      <p>This mode maps to the IP handling modes described in [[RTCWEB-IP-HANDLING]].</p>
+      <div>
+        <pre class="idl">enum RTCConnectionMode {
+  "enumerate-all",
+  "default-route",
+  "restricted"
+};</pre>
+        <table data-link-for="RTCConnectionMode" data-dfn-for=
+        "RTCConnectionMode" class="simple">
+          <tbody>
+            <tr>
+              <th colspan="2">Enumeration description</th>
+            </tr>
+            <tr>
+              <td><dfn data-idl><code>enumerate-all</code></dfn></td>
+              <td>
+                <p>Expose addresses from all network interfaces for communication with STUN servers, TURN servers, or peers. This will converge on the best connection path and performance, but discloses the most information.</p>
+                <p>Maps to mode 1 of [[RTCWEB-IP-HANDLING]].</p>
+              </td>
+            </tr>
+            <tr>
+              <td><dfn data-idl><code>default-route</code></dfn></td>
+              <td>
+                <p>Expose addresses of the network interface that is associated to the route that is being used to reach the page's origin.</p>
+                <p>Maps to mode 2 of [[RTCWEB-IP-HANDLING]]. Additional private addresses MAY be concealed by the use of [[RTCWEB-MDNS-ICE-CANDIDATES]] but default route addresses MUST be exposed unconcealed.</p>
+              </td>
+            </tr>
+            <tr>
+              <td><dfn data-idl><code>restricted</code></dfn></td>
+              <td>
+                <p>Don't expose any private addresses directly. Addresses gathered are those discovered via STUN or TURN on the origin's route or via a proxy. This may cause packets to traverse through a NAT or require falling back to relay candidates, with resulting connection quality implications.</p>
+                <p>Maps to mode 3 and 4 of [[RTCWEB-IP-HANDLING]]. Also applies if all private addresses are being concealed by the use of [[RTCWEB-MDNS-ICE-CANDIDATES]].</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </section>
   </section>
   <section class="informative">

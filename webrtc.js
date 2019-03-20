@@ -237,6 +237,19 @@ var respecConfig = {
             ],
            "rawDate": "2018-06-21",
            "edDraft": "https://w3c.github.io/webrtc-pc/identity.html"
+        },
+        "RTCWEB-MDNS-ICE-CANDIDATES": {
+            "authors": [
+                "Y. Fablet",
+                "J. de Borst",
+                "J. Uberti",
+                "Q. Wang"
+            ],
+            "href": "https://tools.ietf.org/html/draft-ietf-rtcweb-mdns-ice-candidates",
+            "publisher": "IETF",
+            "status": "Active Internet-Draft",
+            "title": "Using Multicast DNS to protect privacy when exposing ICE candidates",
+            "date": "22 October 2018"
         }
     },
   postProcess: [cleanHTMLRef, dedupOverload]
