@@ -11014,6 +11014,8 @@ async function gatherStats() {
                   </ol>
                 </li>
               </ol>
+              <p>If the <code><a>RTCConnectionMode</a></code> has been altered, that mode MUST be effective immediately to all <code><a>RTCPeerConnection</a></code> instances associated to the same JavaScript realm.</p>
+              <div class="note">While the <code><a>RTCConnectionMode</a></code> will be effective immediately, an <code><a>RTCPeerConnection</a></code> that has already started the negotiation phase will usually not pick up new candidates immediately. In order to leverage the <a>best available <code>RTCConnectionMode</code></a>, an ICE restart may be required.</div>
             </dd>
           </dl>
         </section>
