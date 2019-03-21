@@ -10972,8 +10972,8 @@ async function gatherStats() {
       <p>The Direct Connection Permission API extends the <code><a>RTCPeerConnection</a></code> interface as described below.</p>
       <div>
         <pre class="idl">partial interface RTCPeerConnection {
-    Promise&lt;RTCConnectionMode&gt; getConnectionMode ();
-    Promise&lt;void&gt;              requestDirectConnection ();
+    static Promise&lt;RTCConnectionMode&gt; getConnectionMode ();
+    static Promise&lt;void&gt;              requestDirectConnection ();
 };</pre>
         <section>
           <h2>Methods</h2>
