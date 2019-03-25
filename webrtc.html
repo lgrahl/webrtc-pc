@@ -10972,7 +10972,7 @@ async function gatherStats() {
       <p>The Direct Connection Permission API extends the <code><a>RTCPeerConnection</a></code> interface as described below.</p>
       <div>
         <pre class="idl">partial interface RTCPeerConnection {
-    static Promise&lt;void&gt; requestDirectConnection ();
+    static Promise&lt;boolean&gt; requestDirectConnection ();
 };</pre>
         <section>
           <h2>Methods</h2>
@@ -10987,7 +10987,7 @@ async function gatherStats() {
                 <li><a>Request permission to use</a> using a <code>PermissionDescriptor</code> with its <code>name</code> member set to <code>"direct-connection"</code>:
                   <ol>
                     <li>Let <var>result</var> be the result of the permission request.</li>
-                    <li>If <var>result</var> is <code>"granted"</code>, then <a>resolve</a> <var>promise</var> with <code>undefined</code> and abort these steps.</li>
+                    <li>If <var>result</var> is <code>"granted"</code>, then <a>resolve</a> <var>promise</var> with <code>true</code> in case the IP handling mode has been upgraded, or <code>false</code> in case the IP handling mode has not been upgraded. Then, abort these steps.</li>
                     <li>
                       <p>If <var>result</var> is <code>"denied"</code>, then <a>reject</a> <var>promise</var> with a newly <a data-link-for="exception" data-lt="create">created</a> <code>DOMException</code> of type <code>NotAllowedError</code>.</p>
                       <p>The user agent MAY choose to <a data-lt="create-permission">create a permission storage entry</a> for later use by the same origin, so that the user does not need to grant permission again at a later time.</p>
@@ -11000,6 +11000,68 @@ async function gatherStats() {
             </dd>
           </dl>
         </section>
+      </div>
+      <section class="informative" id="requestdirectconnection-example*">
+        <h3>Examples</h3>
+        <p>A web application using the direct connection permission request is recommended to only request this permission when really needed. If it does request the permission, it should provide context. The following examples will provide usage suggestions for a couple of use cases.</p>
+        <section>
+          <h4>Upgrade connection if relayed</h4>
+          <p>The following mechanism can be used for applications that always provide <code><a>RTCIceCandidate</a></code>s of type <code>relay</code> to create an initial connection and then try to upgrade.</p>
+          <div>
+            <pre class="example highlight">
+async function upgradeConnectionIfRelayed() {
+  const pair = pc.getSelectedCandidatePair();
+  if (pair.local.type !== 'host') {
+    try {
+      const upgraded = await pc.requestDirectConnection();
+      if (upgraded) {
+        doIceRestart();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+}
+            </pre>
+          </div>
+          <p>Ideally, the application supplies a mechanism to coordinate the permission request on both sides (if needed), to prevent two consecutive ICE restarts.</p>
+        </section>
+        <section>
+          <h4>Joining a session</h4>
+          <p>Voice and video chats usually have the concept of a <i>room</i> that is being joined. When a user joins such a <i>room</i>, the permission could be requested which would provide sufficient context to the user.</p>
+          <div>
+            <pre class="example highlight">
+async function joinRoom() {
+  try {
+    await pc.requestDirectConnection();
+  } catch (err) {
+    console.error(err);
+  }
+
+  // Now, create the peer-to-peer connection
+}
+            </pre>
+          </div>
+        </section>
+        <section>
+          <h4>Sending a file</h4>
+          <p>A file sharing application will eventually have to let the user choose a file to be transmitted. Once that selection has been made, requesting a direct connection should provide sufficient context to the user.</p>
+          <div>
+            <pre class="example highlight">
+async function onFileSelected(file) {
+  try {
+    await pc.requestDirectConnection();
+  } catch (err) {
+    console.error(err);
+  }
+
+  // Now, create the peer-to-peer connection
+  // Then, send the file via data channel
+}
+            </pre>
+          </div>
+        </section>
+      </section>
     </section>
   </section>
   <section class="informative">
