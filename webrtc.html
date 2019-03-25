@@ -11033,7 +11033,11 @@ async function upgradeConnectionIfRelayed() {
             <pre class="example highlight">
 async function joinRoom() {
   // Request camera/microphone access if desired
-  navigator.mediaDevices.getUserMedia(constraints);
+  try {
+    await navigator.mediaDevices.getUserMedia(constraints);
+  } catch (err) {
+    console.error(err);
+  }
   
   // Media devices may implicitly grant a direct connection permission,
   // so this potentially does not prompt.
