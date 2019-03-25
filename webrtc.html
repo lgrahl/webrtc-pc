@@ -10987,11 +10987,11 @@ async function gatherStats() {
                 <li><a>Request permission to use</a> using a <code>PermissionDescriptor</code> with its <code>name</code> member set to <code>"direct-connection"</code>:
                   <ol>
                     <li>Let <var>result</var> be the result of the permission request.</li>
-                    <li>If <var>result</var> is <code>"granted"</code>, then <a>resolve</a> <var>promise</var> with <code>true</code> in case the IP handling mode has been upgraded, or <code>false</code> in case the IP handling mode has not been upgraded. Then, abort these steps.</li>
                     <li>
-                      <p>If <var>result</var> is <code>"denied"</code>, then <a>reject</a> <var>promise</var> with a newly <a data-link-for="exception" data-lt="create">created</a> <code>DOMException</code> of type <code>NotAllowedError</code>.</p>
+                      <p>If <var>result</var> is <code>"granted"</code>, then <a>resolve</a> <var>promise</var> with <code>true</code> in case the IP handling mode has been upgraded, or <code>false</code> in case the IP handling mode has not been upgraded.</p>
                       <p>The user agent MAY choose to <a data-lt="create-permission">create a permission storage entry</a> for later use by the same origin, so that the user does not need to grant permission again at a later time.</p>
                     </li>
+                    <li>If <var>result</var> is <code>"denied"</code>, then <a>resolve</a> <var>promise</var> with <code>false</code>.</li>
                   </ol>
                 </li>
               </ol>
