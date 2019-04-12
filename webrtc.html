@@ -3977,11 +3977,6 @@ interface RTCSessionDescription {
             described at the start of this section, return <code>true</code>.
             </p>
           </li>
-          <li>
-            <p>If the [[RTCWEB-IP-HANDLING]] mode has been altered since the
-           last time this algorithm has been invoked, return
-           <code>true</code>.</p>
-          </li>
             <li>
               <p>Let <var>description</var> be
               <var>connection</var>.<a>[[\CurrentLocalDescription]]</a>.</p>
@@ -10978,7 +10973,18 @@ async function gatherStats() {
       <div>
         <pre class="idl">partial interface RTCPeerConnection {
     static void registerDirectConnectionInterest ();
+    attribute EventHandler onconnectionupgradable;
 };</pre>
+        <section>
+          <h2>Attributes</h2>
+          <dl data-link-for="RTCPeerConnection" data-dfn-for=
+          "RTCPeerConnection" class="attributes">
+            <dt><dfn data-idl><code>onconnectionupgradable</code></dfn> of type
+            <span class="idlAttrType">EventHandler</span></dt>
+            <dd>The event type of this event handler is
+            <code><a>connectionupgradable</a></code>.</dd>
+          </dl>
+        </section>
         <section>
           <h2>Methods</h2>
           <dl data-link-for="RTCPeerConnection" data-dfn-for=
@@ -11015,10 +11021,10 @@ async function gatherStats() {
           <li>Let <var>connection</var> be the <code><a>RTCPeerConnection</a></code>.</li>
           <li>If <var>connection</var>'s <a>[[\IsClosed]]</a> slot is <code>true</code>, then abort these steps.</li>
           <li>Update the <var>connection</var>'s [[RTCWEB-IP-HANDLING]] mode with <var>mode</var>.</li>
-          <li>If <var>connection</var>'s <a>ICE gathering state</a> is <code>"connected"</code>, then <a data-lt="update the negotiation-needed flag">update the
-negotiation-needed flag</a> for <var>connection</var>.</li>
+          <li><a>Fire an event</a> named <code><a>connectionupgradable</a></code> at <var>connection</var> and abort these steps.</li>
         </ol>
       </ol>
+      <div class="note">If the mode is being upgraded, the event will be fired. However, if the mode has been downgraded, the event will not fire and the downgrade will not be effective for the lifetime of the <code><a>RTCPeerConnection</a></code>.</div>
     </section>
     <section class="informative" id="directconnectionpermission-example*">
       <h3>Direct Connection Permission Usage Examples</h3>
@@ -11029,8 +11035,11 @@ negotiation-needed flag</a> for <var>connection</var>.</li>
         <p>The following mechanism can be used for applications that want to establish a connection as soon as possible, albeit potentially not as direct as possible. In this example, the application tries to upgrade as soon as a connection has been established that is not considered ideal (or the connection could not be established).</p>
         <div>
           <pre class="example highlight">
-pc.onnegotiationneeded = async () => {
-  // Exchange new offer/answer via the signalling channel...
+pc.onconnectionupgradable = async () => {
+  // Initiate an ICE restart
+  const offer = await pc.createOffer({iceRestart: true});
+
+  // Exchange offer/answer via the signalling channel...
 };
 
 pc.onconnectionstatechange = async () => {
@@ -11045,7 +11054,7 @@ pc.onconnectionstatechange = async () => {
     // Check if requesting a direct connection would be useful
     const pair = iceTransport.getSelectedCandidatePair();
     if (pair.local.type !== 'host') {
-      // Once granted, this will fire the 'negotiationneeded' event
+      // Once granted, this will fire the 'connectionupgradable' event
       RTCPeerConnection.registerDirectConnectionInterest();
     }
   }
@@ -11059,8 +11068,11 @@ pc.onconnectionstatechange = async () => {
         <p>Voice and video chats usually have the concept of a <i>room</i> that is being joined. When a user joins such a <i>room</i>, the permission could be requested which would provide sufficient context to the user.</p>
         <div>
           <pre class="example highlight">
-pc.onnegotiationneeded = async () => {
-  // Exchange new offer/answer via the signalling channel...
+pc.onconnectionupgradable = async () => {
+  // Initiate an ICE restart
+  const offer = await pc.createOffer({iceRestart: true});
+
+  // Exchange offer/answer via the signalling channel...
 };
 
 async function joinRoom() {
@@ -11072,7 +11084,7 @@ async function joinRoom() {
     console.error(err);
   }
 
-  // Once granted, this will fire the 'negotiationneeded' event if needed
+  // Once granted, this will fire the 'connectionupgradable' event if needed
   RTCPeerConnection.registerDirectConnectionInterest();
 
   // Now, create the peer-to-peer connection
@@ -11085,12 +11097,15 @@ async function joinRoom() {
         <p>A file sharing application will eventually have to let the user choose a file to be transmitted. Once that selection has been made, requesting a direct connection should provide sufficient context to the user.</p>
         <div>
           <pre class="example highlight">
-pc.onnegotiationneeded = async () => {
-  // Exchange new offer/answer via the signalling channel...
+pc.onconnectionupgradable = async () => {
+  // Initiate an ICE restart
+  const offer = await pc.createOffer({iceRestart: true});
+
+  // Exchange offer/answer via the signalling channel...
 };
 
 async function onFileSelected(file) {
-  // Once granted, this will fire the 'negotiationneeded' event if needed
+  // Once granted, this will fire the 'connectionupgradable' event if needed
   RTCPeerConnection.registerDirectConnectionInterest();
 
   // Now, create the peer-to-peer connection
@@ -12155,6 +12170,12 @@ if (sender.dtmf.canInsertDTMF) {
           <td>A new <code><a>RTCStatsEvent</a></code> is dispatched to
           the script in response to one or more <a>monitored object</a>s
           being <a href="#dfn-delete-stats">deleted</a> at the same time.</td>
+        </tr>
+        <tr>
+          <td><dfn id="event-connectionupgradable"><code>connectionupgradable</code></dfn></td>
+          <td><code><a>Event</a></code></td>
+          <td>The [[RTCWEB-IP-HANDLING]] mode for the <code><a>RTCPeerConnection</a></code> has been upgraded. The application needs to do an ICE restart if it wants to upgrade its connection to be potentially more direct.</td>
+        </tr>
       </tbody>
     </table>
     <p>The following events fire on <code><a>RTCDTMFSender</a></code>
