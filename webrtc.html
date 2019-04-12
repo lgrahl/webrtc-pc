@@ -11025,8 +11025,8 @@ negotiation-needed flag</a> for <var>connection</var>.</li>
       <p>A web application using the Direct Connection Permission API is recommended to only request this permission when really needed. If it does request the permission, it should provide context. Furthermore, it should not rely on a permission request being prompted. While the user agent may use a prompt, it may also use different techniques to enable explicit permission approval, for example in form of a toggle button next to the address bar of the browser.</p>
       <p>The following examples will provide usage suggestions for a couple of use cases.</p>
       <section>
-        <h4>Upgrade connection if relayed</h4>
-        <p>The following mechanism can be used for applications that always provide <code><a>RTCIceCandidate</a></code>s of type <code>relay</code> to create an initial connection and then try to upgrade.</p>
+        <h4>Upgrade connection</h4>
+        <p>The following mechanism can be used for applications that want to establish a connection as soon as possible, albeit potentially not as direct as possible. In this example, the application tries to upgrade as soon as a connection has been established that is not considered ideal (or the connection could not be established).</p>
         <div>
           <pre class="example highlight">
 pc.onnegotiationneeded = async () => {
